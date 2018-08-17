@@ -1,0 +1,107 @@
+<!--
+
+Written by Lakkie
+(who did you expect?)
+
+-->
+
+
+<style>
+
+/*
+You can also change the style of things here.
+The name should be self-explanatory(container doesn't really do anything visually, it's just for page structure)
+*/
+
+.container{
+  display:inline-flex;
+  position:relative;
+}
+
+
+#feynman_text{
+  position:absolute;
+  border:2px solid;
+  top: 5px;
+  width: 80px;
+  text-align:center;
+  opacity: 0;
+  transition: 0.5s;
+}
+
+.knob {
+  border-radius: 100%;
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  cursor: pointer;
+  display: block;
+}
+</style>
+
+<div id="knob-container" class='container'>
+<img src='https://upload.wikimedia.org/wikipedia/en/4/42/Richard_Feynman_Nobel.jpg' id='feynman'/>
+  <div id='feynman_text'>abc</div>
+</div>
+
+<script>
+var text = document.querySelector("#feynman_text");
+
+/*
+This is where the editing is done. PAY ATTENTION TO COMMAS AND QUOTES!
+*/
+
+// Here is all the information about each knob in order:
+// 0: The link that this knob points to
+// 1: The description of the knob
+// 2: The X position of the knob
+// 3: The Y position of the knob
+// 4: The color of the knob
+// 5: If the link will open in a new tab
+
+var knobMetadata = {
+  1: ["https://en.wikipedia.org/wiki/Hair", "This is the hair.", 140, 35, "#333", true],
+  2: ["https://en.wikipedia.org/wiki/Hand", "This is the hand.", 170, 210, "#ccc", false]
+};
+
+/*
+End of editing.
+*/
+
+function enterKnob(knobID) {
+  text.innerText = knobMetadata[knobID][1];
+  text.style.opacity = "1";
+}
+
+function clickKnob(knobID) {
+  if (knobMetadata[knobID][5]) {
+    window.open(knobMetadata[knobID][0], "_blank");
+  } else {
+    window.location.href = knobMetadata[knobID][0];
+  }
+}
+
+function exitKnob(knobID) {
+  text.style.opacity = "0";
+}
+
+var parentContainerElement = document.querySelector("#knob-container");
+
+function createKnob(knobID) {
+  var domElement = document.createElement("button");
+  domElement.classList.add("knob");
+  domElement.setAttribute("draggable", "false");
+  domElement.style.left = knobMetadata[knobID][2] + "px";
+  domElement.style.top = knobMetadata[knobID][3] + "px";
+  domElement.style.backgroundColor = knobMetadata[knobID][4];
+  parentContainerElement.appendChild(domElement);
+  domElement.onmouseover = function() { enterKnob(knobID) };
+  domElement.onclick = function() { clickKnob(knobID) };
+  domElement.onmouseout = function() { exitKnob(knobID) };
+}
+
+for (var key in knobMetadata) {
+	createKnob(key);
+}
+
+</script>
