@@ -1,10 +1,12 @@
 <!--
 
-Written by Lakkie
-(who did you expect?)
+Written by Lakkie (c) 2018
+
+**Who did you expect?**
 
 -->
 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
 <style>
 
@@ -13,67 +15,130 @@ You can also change the style of things here.
 The name should be self-explanatory(container doesn't really do anything visually, it's just for page structure)
 */
 
+.ms-rte-layoutszone-inner {
+        margin: 0;
+}
+
+.ms-rte-layoutszone-inner, s4-bodyContainer, s4-workspace {
+	background-color: rgb(223, 223, 223);
+}
+
 .container{
   display:inline-flex;
   position:relative;
+  overflow: hidden;
+  padding-bottom: 90px;
 }
 
 
-#feynman_text{
-  position:absolute;
-  border:2px solid;
-  top: 5px;
-  width: 80px;
-  text-align:center;
+#ZS_text{
+  display: none;
+  position: absolute;
+  top: 300px;
+  left: 100px;
+  border: 1px solid #fff;
+  text-align: left;
   opacity: 0;
-  transition: 0.5s;
+  transition: 1s;
+  background-color: #001e8c;
+  padding: 5px;
+  color: #fff;
+  border-color: #fff;
+  font-family: Arial, Helvetica, sans-serif;
+  border-radius: 15px;
+  font-size: 83%;
+  z-index: 10;
+  pointer-events: none;
 }
 
 .knob {
-  border-radius: 100%;
-  width: 20px;
-  height: 20px;
+  /* border-radius: 100%; */
   position: absolute;
   cursor: pointer;
   display: block;
+  border: 0;
+  opacity: 0; /* <---- This is the transparency of the knobs */
+  padding: 0;
 }
+
 </style>
 
 <div id="knob-container" class='container'>
-<img src='https://upload.wikimedia.org/wikipedia/en/4/42/Richard_Feynman_Nobel.jpg' id='feynman'/>
-  <div id='feynman_text'>abc</div>
+  <img src='https://teamshare.zeiss.org/minimal/07898/Shared%20Documents/ZS-Main-FinalFinal-2.png' id='ZS' draggable="false" />
+  <div id='ZS_text' style="width: 420px;"></div>
 </div>
 
 <script>
-var text = document.querySelector("#feynman_text");
+var text = document.querySelector("#ZS_text");
 
 /*
-This is where the editing is done. PAY ATTENTION TO COMMAS AND QUOTES!
+
+	This is where the editing is done. PAY ATTENTION TO COMMAS AND QUOTES!
+
+	Here is all the information about each knob in order:
+	0: The link that this knob points to
+	1: The description of the knob
+	2: The X position of the knob
+	3: The Y position of the knob
+	4: The color of the knob
+	5: If the link will open in a new tab
+	6: Width of the knob
+	7: Height of the knob
+
 */
 
-// Here is all the information about each knob in order:
-// 0: The link that this knob points to
-// 1: The description of the knob
-// 2: The X position of the knob
-// 3: The Y position of the knob
-// 4: The color of the knob
-// 5: If the link will open in a new tab
-
 var knobMetadata = {
-  1: ["https://en.wikipedia.org/wiki/Hair", "This is the hair.", 140, 35, "#333", true],
-  2: ["https://en.wikipedia.org/wiki/Hand", "This is the hand.", 170, 210, "#ccc", false]
 };
 
 /*
 End of editing.
 */
 
+var image = document.querySelector("#ZS");
+var runningTimeout = -1;
+var activeTransition = true;
+var rightAlign = false;
+
 function enterKnob(knobID) {
-  text.innerText = knobMetadata[knobID][1];
+  if (runningTimeout !== -1) {
+    clearTimeout(runningTimeout);
+  }
+  text.innerHTML = knobMetadata[knobID][1];
+  text.style.minHeight = "0px";
   text.style.opacity = "1";
+  activeTransition = true;
+  setTimeout(function() {
+    activeTransition = false;
+  }, 1000);
+  text.style.display = "block";
+  // If this is true, it's on the left
+  if (image.width / 2 > knobMetadata[knobID][2]) {
+    text.style.left = (knobMetadata[knobID][2] + knobMetadata[knobID][6] + 20) + "px";
+    text.style.right = "auto";
+  } else {
+    var textWidthString = document.querySelector("#ZS_text").style.width;
+    var textWidth = textWidthString.substring(0, textWidthString.length - 2);
+    text.style.left = (knobMetadata[knobID][2] - textWidth - 20) + "px";
+    text.style.right = "auto";
+    rightAlign = true;
+  }
+  if (image.height / 2 < knobMetadata[knobID][3]) {
+    var bottomValue = ($("#ZS").height() - knobMetadata[knobID][3] - knobMetadata[knobID][7]);
+    if (bottomValue <= 90) {
+      bottomValue = 90;
+    }
+    text.style.bottom = bottomValue + "px";
+    text.style.top = "auto";
+  } else {
+    text.style.bottom = "auto";
+    text.style.top = (knobMetadata[knobID][3] + knobMetadata[knobID][7]) + "px";
+  }
 }
 
 function clickKnob(knobID) {
+  if (activeTransition) {
+    return;
+  }
   if (knobMetadata[knobID][5]) {
     window.open(knobMetadata[knobID][0], "_blank");
   } else {
@@ -82,7 +147,28 @@ function clickKnob(knobID) {
 }
 
 function exitKnob(knobID) {
+  text.style.minHeight = $("#ZS_text").height() + "px";
   text.style.opacity = "0";
+  if (text.style.right !== "auto") {
+    var rightVar = parseInt(text.style.right.substring(0, text.style.right.length - 2));
+    text.style.right = (rightVar + 600) + "px";
+  }
+  if (text.style.left !== "auto") {
+    var leftVar = parseInt(text.style.left.substring(0, text.style.left.length - 2));
+    if (rightAlign) {
+      text.style.left = (leftVar - 600) + "px";
+    } else {
+      text.style.left = (leftVar + 600) + "px";
+    }
+  }
+  if (text.style.top !== "auto") {
+    var topVar = parseInt(text.style.top.substring(0, text.style.top.length - 2));
+    text.style.top = (topVar - 600) + "px";
+  }
+  if (text.style.bottom !== "auto") {
+    var bottomVar = parseInt(text.style.bottom.substring(0, text.style.bottom.length - 2));
+    text.style.bottom = (bottomVar - 600) + "px";
+  }
 }
 
 var parentContainerElement = document.querySelector("#knob-container");
@@ -94,6 +180,10 @@ function createKnob(knobID) {
   domElement.style.left = knobMetadata[knobID][2] + "px";
   domElement.style.top = knobMetadata[knobID][3] + "px";
   domElement.style.backgroundColor = knobMetadata[knobID][4];
+  domElement.style.minWidth = knobMetadata[knobID][6] + "px";
+  domElement.style.minHeight = knobMetadata[knobID][7] + "px";
+  domElement.style.maxWidth = knobMetadata[knobID][6] + "px";
+  domElement.style.maxHeight = knobMetadata[knobID][7] + "px";
   parentContainerElement.appendChild(domElement);
   domElement.onmouseover = function() { enterKnob(knobID) };
   domElement.onclick = function() { clickKnob(knobID) };
@@ -105,3 +195,4 @@ for (var key in knobMetadata) {
 }
 
 </script>
+<head><title></title></head>
